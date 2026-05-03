@@ -9,16 +9,17 @@ import {
 
 export default function Home() {
   const [selectedImg, setSelectedImg] = useState('/img1.png');
-  const [selectedPackage, setSelectedPackage] = useState('20');
-  
+  const [selectedPackage, setSelectedPackage] = useState('3');
+
   // Novo estado para a quantidade do seletor numérico
   const [quantity, setQuantity] = useState(1);
 
   const prices = {
-    '20': { original: '99,90', current: '69,90' },
-    '35': { original: '99,90', current: '79,90' },
-    '50': { original: '124,90', current: '109,90' },
-    '100': { original: '249,90', current: '199,90' },
+    '3': { original: '19,90', current: '12,90' },
+    '5': { original: '29,90', current: '17,90' },
+    '9': { original: '44,90', current: '24,90' },
+    '15': { original: '69,90', current: '39,90' },
+
   };
 
   const currentPrice = prices[selectedPackage as keyof typeof prices];
@@ -168,6 +169,47 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            {/* --- NOVA DESCRIÇÃO DO PRODUTO ABAIXO DA GALERIA --- */}
+            <div className="mt-12 space-y-8 border-t border-gray-100 pt-8">
+              <div>
+                <h3 className="text-2xl font-bold text-[#3D144C] mb-4">Descrição do produto</h3>
+                <div className="space-y-4 text-[#5D4037] leading-relaxed">
+                  <p className="font-semibold text-lg">Foto ímã estilo Polaroid!</p>
+                  <p>Monte seu álbum de geladeira! Ótima opção para decorar sua casa ou presentear pessoas especiais!</p>
+                  <div className="py-2">
+                    <p className="font-bold mb-2">Especificações técnicas:</p>
+                    <ul className="list-none space-y-1 ml-1">
+                      <li>• Fotos impressas em papel fotográfico de alta qualidade</li>
+                      <li>• Tamanho: 7x5,5cm</li>
+                      <li>• Ímã total no verso (máxima aderência)</li>
+                    </ul>
+                  </div>
+                  <p className="bg-pink-50 p-4 rounded-lg border-l-4 border-[#D63384] text-sm italic">
+                    <strong>Importante:</strong> Após a compra, entre em contato pelo chat ou WhatsApp. Iremos disponibilizar o e-mail para o envio das fotos!
+                  </p>
+                </div>
+              </div>
+
+              {/* Grid Técnico */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-y border-gray-100">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[#D63384] font-bold text-[10px] uppercase tracking-wider">Medidas</span>
+                  <span className="text-[#3D144C] font-extrabold text-sm">7 x 5,5 cm</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[#D63384] font-bold text-[10px] uppercase tracking-wider">Peso</span>
+                  <span className="text-[#3D144C] font-extrabold text-sm">3 g</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[#D63384] font-bold text-[10px] uppercase tracking-wider">Código</span>
+                  <span className="text-[#3D144C] font-extrabold text-sm">1DC3E5D</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[#D63384] font-bold text-[10px] uppercase tracking-wider">Ano</span>
+                  <span className="text-[#3D144C] font-extrabold text-sm">2026</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Lado Direito: Informações e Compra */}
@@ -175,11 +217,11 @@ export default function Home() {
 
             <div className="bg-gray-100 px-6 py-2 rounded-sm mb-6">
               <span className="text-[#5D4037] text-[11px] font-bold uppercase tracking-widest">
-                Desconto Progressivo
+                ímã de Geladeira Personalizado
               </span>
             </div>
 
-            <h2 className="text-3xl font-bold text-[#3D144C] mb-1">Ímãs de geladeiras</h2>
+            <h2 className="text-3xl font-bold text-[#3D144C] mb-1">Foto Presente Criativo</h2>
             <p className="text-[11px] text-[#5D4037] font-bold mb-4 uppercase tracking-tighter">REF: IMAPAC</p>
 
             <div className="flex items-center gap-1 mb-8">
@@ -201,10 +243,10 @@ export default function Home() {
                   onChange={(e) => setSelectedPackage(e.target.value)}
                   className="w-full border border-[#3D144C]/30 rounded-sm p-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#3D144C] bg-white text-[#3D144C]"
                 >
-                  <option value="20">Pacote com 20 unidades</option>
-                  <option value="35">Pacote com 35 unidades</option>
-                  <option value="50">Pacote com 50 unidades</option>
-                  <option value="100">Pacote com 100 unidades</option>
+                  <option value="3">Kit com 3 unidades</option>
+                  <option value="5">Kit com 5 unidades</option>
+                  <option value="9">Kit com 9 unidades</option>
+                  <option value="15">Kit com 15 unidades</option>
                 </select>
               </div>
 
@@ -221,14 +263,35 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-sm p-6 text-center space-y-4">
-                <p className="text-[#3D144C] font-bold flex items-center justify-center gap-2">
-                  Produto com desconto progressivo
-                  <span className="inline-block border border-[#3D144C] rounded-full w-4 h-4 text-[10px] flex items-center justify-center">?</span>
+              <div className="bg-pink-50 rounded-sm p-6 text-center space-y-4 border border-pink-100">
+                <p className="text-[#3D144C] font-bold flex items-center justify-center gap-2 text-lg">
+                  Por que escolher a Lembrô?
                 </p>
-                <div className="space-y-2">
-                  <p className="text-[13px] text-[#3D144C]">Desconto de 5% nas compras acima de 3 presentes</p>
-                  <p className="text-[13px] text-[#3D144C]">Desconto de 15% nas compras acima de 5 presentes</p>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-start gap-3 text-left">
+                    <span className="text-[#D63384]">✓</span>
+                    <p className="text-[13px] text-[#3D144C]">
+                      <strong>Qualidade Premium:</strong> Papel fotográfico de alta gramatura com proteção UV.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 text-left">
+                    <span className="text-[#D63384]">✓</span>
+                    <p className="text-[13px] text-[#3D144C]">
+                      <strong>Imã Total:</strong> Verso 100% imantado (não cai da geladeira).
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 text-left">
+                    <span className="text-[#D63384]">✓</span>
+                    <p className="text-[13px] text-[#3D144C]">
+                      <strong>Pronto para Presentear:</strong> Embalagem especial inclusa em todos os kits.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-pink-200">
+                  <p className="text-[12px] text-[#D63384] font-bold italic">
+                    🔥 Promoção por tempo limitado!
+                  </p>
                 </div>
               </div>
 
@@ -242,14 +305,14 @@ export default function Home() {
                     className="w-16 bg-transparent text-center font-bold text-[#3D144C] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <div className="flex flex-col border-l border-gray-200">
-                    <button 
+                    <button
                       onClick={increment}
                       className="flex-1 px-2 hover:bg-gray-200 transition-colors text-[10px]"
                       type="button"
                     >
                       ▲
                     </button>
-                    <button 
+                    <button
                       onClick={decrement}
                       className="flex-1 px-2 hover:bg-gray-200 transition-colors text-[10px]"
                       type="button"
@@ -369,7 +432,7 @@ export default function Home() {
           className="fixed bottom-6 right-6 z-50 hover:scale-110 transition-transform active:scale-95 drop-shadow-xl"
         >
           <Image
-            src="/whtas.png" 
+            src="/whtas.png"
             alt="WhatsApp Lembrô"
             width={65}
             height={65}
