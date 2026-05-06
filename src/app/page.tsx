@@ -114,6 +114,34 @@ export default function Home() {
 
   const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
+  // --- FUNÇÃO DE CHECKOUT MERCADO PAGO ---
+  const handleCheckout = async () => {
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cart.map(item => ({
+          title: `${item.name} - Kit ${item.kit}`,
+          price: item.price,
+          quantity: item.quantity
+        }))),
+      });
+
+      const data = await response.json();
+
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        alert("Erro ao processar o pagamento. Tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro no checkout:", error);
+      alert("Erro de conexão com o servidor.");
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -623,7 +651,7 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => alert("Próximo passo: Integração Mercado Pago!")}
+                onClick={handleCheckout}
                 className="w-full bg-[#00CED1] py-4 rounded-xl text-white font-bold uppercase tracking-widest hover:bg-[#00B8B8] transition-all shadow-lg flex items-center justify-center gap-3"
               >
                 Finalizar Pedido
