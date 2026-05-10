@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // IMPORTAÇÃO ADICIONADA
 import { auth, db } from '@/app/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff, MapPin, Phone, CreditCard, CheckCircle2 } from 'lucide-react';
 
 export default function Cadastro() {
+  const router = useRouter(); // INICIALIZAÇÃO DO ROTEADOR
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false); 
@@ -31,8 +33,46 @@ export default function Cadastro() {
     estado: ''
   });
 
+  // FUNÇÃO QUE BUSCA O CEP AUTOMATICAMENTE
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value.replace(/\D/g, '');
+    
+    if (cep.length === 8) {
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+
+        if (!data.erro) {
+          setFormData(prev => ({
+            ...prev,
+            endereco: data.logradouro,
+            bairro: data.bairro,
+            cidade: data.localidade,
+            estado: data.uf
+          }));
+          setError('');
+        } else {
+          setError('CEP não encontrado.');
+        }
+      } catch (err) {
+        setError('Erro ao buscar o CEP automaticamente.');
+      }
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    if (name === 'cep') {
+      const maskedValue = value
+        .replace(/\D/g, '')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .substring(0, 9);
+      setFormData({ ...formData, [name]: maskedValue });
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -70,11 +110,11 @@ export default function Cadastro() {
       });
 
       setSuccess(true);
-      setFormData({
-        nome: '', email: '', confirmarEmail: '', password: '', confirmarSenha: '',
-        cpf: '', celular: '', cep: '', endereco: '', numero: '',
-        complemento: '', referencia: '', bairro: '', cidade: '', estado: ''
-      });
+      
+      // REDIRECIONAMENTO AUTOMÁTICO APÓS 3 SEGUNDOS
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
       
     } catch (err: any) {
       setError(err.code === 'auth/email-already-in-use' ? 'E-mail já cadastrado.' : 'Erro ao criar conta.');
@@ -100,11 +140,11 @@ export default function Cadastro() {
           </div>
 
           {success && (
-            <div className="mb-8 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl animate-in fade-in zoom-in duration-300">
+            <div className="mb-8 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl animate-in fade-in zoom-in duration-500">
               <CheckCircle2 className="text-emerald-500" size={24} />
               <div>
                 <p className="font-bold">Cadastro criado com sucesso!</p>
-                <p className="text-sm">Clique em "Fazer Login" para acessar sua conta agora mesmo.</p>
+                <p className="text-sm">Aguarde... você será redirecionado para o login em instantes.</p>
               </div>
             </div>
           )}
@@ -144,7 +184,16 @@ export default function Cadastro() {
                   <MapPin size={16} className="text-[#00CED1]" /> Endereço de Entrega
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-1"><Input label="CEP" name="cep" placeholder="00000-000" value={formData.cep} onChange={handleChange} /></div>
+                  <div className="col-span-1">
+                    <Input 
+                      label="CEP" 
+                      name="cep" 
+                      placeholder="00000-000" 
+                      value={formData.cep} 
+                      onChange={handleChange} 
+                      onBlur={handleCepBlur} 
+                    />
+                  </div>
                   <div className="col-span-2"><Input label="Endereço" name="endereco" placeholder="Rua, Avenida..." value={formData.endereco} onChange={handleChange} /></div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -155,13 +204,16 @@ export default function Cadastro() {
                   <Input label="Complemento" name="complemento" placeholder="Apto, Bloco..." value={formData.complemento} onChange={handleChange} />
                   <Input label="Referência" name="referencia" placeholder="Perto de..." value={formData.referencia} onChange={handleChange} />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} readOnly className="bg-gray-50 cursor-not-allowed opacity-70" />
+                  <Input label="UF" name="estado" value={formData.estado} onChange={handleChange} readOnly className="bg-gray-50 cursor-not-allowed opacity-70" />
+                </div>
               </section>
             </div>
 
             {error && <p className="text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-100 text-sm font-bold">{error}</p>}
 
             <div className="flex flex-col md:flex-row justify-end gap-3 md:gap-4 pt-6 border-t">
-              {/* Botão Fazer Login estilizado com o Rosa do site */}
               <Link 
                 href="/login" 
                 className="w-full md:w-auto px-6 md:px-8 py-3 rounded-xl font-bold text-[#D63384] border-2 border-[#D63384] hover:bg-[#D63384] hover:text-white transition-all flex items-center justify-center shadow-sm text-sm md:text-base"
@@ -173,7 +225,7 @@ export default function Cadastro() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full md:w-auto bg-[#00CED1] hover:bg-[#00B8B8] text-white px-6 md:px-10 py-4 md:py-3 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 text-sm md:text-base active:scale-95"
+                  className="w-full md:w-auto bg-[#00CED1] hover:bg-[#00B8B8] text-white px-6 md:px-10 py-4 md:py-3 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 text-sm md:text-base active:scale-95 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="animate-spin" /> : <>Criar Conta <ArrowRight size={18}/></>}
                 </button>
@@ -186,7 +238,7 @@ export default function Cadastro() {
   );
 }
 
-function Input({ label, icon, ...props }: any) {
+function Input({ label, icon, className, ...props }: any) {
   return (
     <div className="flex flex-col gap-1 w-full">
       <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">{label}</label>
@@ -194,7 +246,7 @@ function Input({ label, icon, ...props }: any) {
         {icon && <div className="absolute left-3 top-3 text-pink-300">{icon}</div>}
         <input
           {...props}
-          className={`w-full bg-white border border-pink-100 rounded-xl py-2.5 ${icon ? 'pl-10' : 'pl-4'} pr-4 text-sm text-gray-800 placeholder:text-gray-300 focus:ring-2 focus:ring-pink-100 focus:border-[#00CED1] outline-none transition-all shadow-sm`}
+          className={`w-full bg-white border border-pink-100 rounded-xl py-2.5 ${icon ? 'pl-10' : 'pl-4'} pr-4 text-sm text-gray-800 placeholder:text-gray-300 focus:ring-2 focus:ring-pink-100 focus:border-[#00CED1] outline-none transition-all shadow-sm ${className}`}
         />
       </div>
     </div>

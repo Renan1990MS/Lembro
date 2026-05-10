@@ -1,5 +1,6 @@
 'use client';
 
+import { ShoppingCart } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -168,9 +169,9 @@ export default function Home() {
 
       {/* --- HEADER PRINCIPAL --- */}
       <header className="w-full bg-white py-3 px-3 md:py-4 md:px-6 border-b border-gray-100 shadow-sm sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6">
           <Link href="/" className="transition-transform hover:scale-105">
-          <h1 className="text-2xl md:text-4xl font-serif text-[#D63384] italic tracking-tighter">
+            <h1 className="text-2xl md:text-4xl font-serif text-[#D63384] italic tracking-tighter">
               Lembrô<span className="text-pink-300">...</span>
             </h1>
           </Link>
@@ -480,36 +481,51 @@ export default function Home() {
                   </p>
                 </div>
 
+
                 <div className="flex flex-col md:flex-row gap-2 h-auto md:h-14">
-              <div className="flex bg-gray-100 rounded-sm overflow-hidden border border-gray-200">
-                <input
-                  type="number"
-                  value={quantity}
-                  readOnly
-                  className="w-16 bg-transparent text-center font-bold text-[#3D144C] focus:outline-none"
-                />
-                <div className="flex flex-col border-l border-gray-200">
-                  <button onClick={increment} className="flex-1 px-2 hover:bg-gray-200 text-[10px]">▲</button>
-                  <button onClick={decrement} className="flex-1 px-2 hover:bg-gray-200 text-[10px]">▼</button>
+                  <div className="flex bg-gray-100 rounded-sm overflow-hidden border border-gray-200">
+                    <input
+                      type="number"
+                      value={quantity}
+                      readOnly
+                      className="w-16 bg-transparent text-center font-bold text-[#3D144C] focus:outline-none"
+                    />
+                    <div className="flex flex-col border-l border-gray-200">
+                      {/* Adicionado cursor-pointer aqui */}
+                      <button
+                        onClick={increment}
+                        className="flex-1 px-2 hover:bg-gray-200 text-[10px] cursor-pointer"
+                      >
+                        ▲
+                      </button>
+
+                      {/* Adicionado cursor-pointer aqui */}
+                      <button
+                        onClick={decrement}
+                        className="flex-1 px-2 hover:bg-gray-200 text-[10px] cursor-pointer"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Ajustado abaixo: Adicionado cursor-pointer e corrigido o fechamento */}
+                  <button
+                    onClick={addToCart}
+                    className="w-full md:flex-1 bg-[#00CED1] hover:brightness-110 text-white font-bold rounded-sm transition-all flex items-center justify-center gap-3 uppercase tracking-wider text-sm shadow-md cursor-pointer"
+                  >
+                    <ShoppingBasket size={22} />
+                    Comprar {activeProduct === 'polaroid' ? 'Polaroid' : ''}
+                  </button>
                 </div>
               </div>
-
-              <button
-                onClick={addToCart}
-                className="w-full md:flex-1 bg-[#00CED1] hover:brightness-110 text-white font-bold rounded-sm transition-all flex items-center justify-center gap-3 uppercase tracking-wider text-sm shadow-md"
-              >
-                <ShoppingBasket size={22} />
-                Comprar {activeProduct === 'polaroid' ? 'Polaroid' : 'Ímã'}
-              </button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-      </section >
+      </section>
 
-    {/* --- FOOTER --- */ }
-    < footer className = "w-full bg-white mt-10" >
+      {/* --- FOOTER --- */}
+      < footer className="w-full bg-white mt-10" >
         <div className="py-10 border-t border-gray-100">
           <div className="max-w-6xl mx-auto flex flex-col items-center gap-4">
             <h3 className="text-4xl font-serif text-[#D63384] italic">Lembrô<span className="text-pink-300">...</span></h3>
@@ -575,97 +591,97 @@ export default function Home() {
         </a>
       </footer >
 
-    {/* --- JANELA LATERAL DO CARRINHO --- */ }
-  {
-    isCartOpen && (
-      <div className="fixed inset-0 z-[100] flex justify-end">
-        {/* Fundo escuro */}
-        <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-          onClick={() => setIsCartOpen(false)}
-        />
-
-        {/* Painel Branco */}
-        <div className="relative w-full sm:max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
-            <div className="flex items-center gap-2">
-              <ShoppingBasket size={24} className="text-[#D63384]" />
-              <h2 className="text-xl font-bold text-[#3D144C]">Meu Carrinho</h2>
-            </div>
-            <button
+      {/* --- JANELA LATERAL DO CARRINHO --- */}
+      {
+        isCartOpen && (
+          <div className="fixed inset-0 z-[100] flex justify-end">
+            {/* Fundo escuro */}
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
               onClick={() => setIsCartOpen(false)}
-              className="p-2 hover:bg-pink-50 rounded-full transition-colors"
-            >
-              <X size={24} className="text-gray-400" />
-            </button>
-          </div>
+            />
 
-          {/* Itens do Carrinho */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-                  <ShoppingBasket size={40} />
+            {/* Painel Branco */}
+            <div className="relative w-full sm:max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
+                <div className="flex items-center gap-2">
+                  <ShoppingBasket size={24} className="text-[#D63384]" />
+                  <h2 className="text-xl font-bold text-[#3D144C]">Meu Carrinho</h2>
                 </div>
-                <p className="text-gray-500 font-medium italic">Sua cesta está vazia... <br /> Que tal enchê-la de memórias?</p>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="text-[#D63384] font-bold uppercase text-xs tracking-widest hover:underline"
+                  className="p-2 hover:bg-pink-50 rounded-full transition-colors"
                 >
-                  Voltar às compras
+                  <X size={24} className="text-gray-400" />
                 </button>
               </div>
-            ) : (
-              cart.map((item) => (
-                <div key={item.id} className="flex gap-4 group">
-                  <div className="w-20 h-24 relative rounded-lg overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
-                    <Image src={item.img} alt={item.name} fill className="object-cover" />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between py-1">
-                    <div>
-                      <h4 className="font-bold text-[#3D144C] text-sm leading-tight mb-1">{item.name}</h4>
-                      <p className="text-[10px] text-[#D63384] font-bold uppercase tracking-wider">Kit {item.kit} Unidades</p>
-                      <p className="text-xs text-gray-400 mt-1">Quantidade: {item.quantity}</p>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <span className="font-bold text-[#3D144C]">R$ {(item.price * item.quantity).toFixed(2)}</span>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
 
-          {/* Rodapé e Fechamento */}
-          {cart.length > 0 && (
-            <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 font-medium">Subtotal:</span>
-                <span className="text-xl font-bold text-[#3D144C]">R$ {cartTotal.toFixed(2)}</span>
+              {/* Itens do Carrinho */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                      <ShoppingBasket size={40} />
+                    </div>
+                    <p className="text-gray-500 font-medium italic">Sua cesta está vazia... <br /> Que tal enchê-la de memórias?</p>
+                    <button
+                      onClick={() => setIsCartOpen(false)}
+                      className="text-[#D63384] font-bold uppercase text-xs tracking-widest hover:underline"
+                    >
+                      Voltar às compras
+                    </button>
+                  </div>
+                ) : (
+                  cart.map((item) => (
+                    <div key={item.id} className="flex gap-4 group">
+                      <div className="w-20 h-24 relative rounded-lg overflow-hidden border border-gray-100 shadow-sm flex-shrink-0">
+                        <Image src={item.img} alt={item.name} fill className="object-cover" />
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                          <h4 className="font-bold text-[#3D144C] text-sm leading-tight mb-1">{item.name}</h4>
+                          <p className="text-[10px] text-[#D63384] font-bold uppercase tracking-wider">Kit {item.kit} Unidades</p>
+                          <p className="text-xs text-gray-400 mt-1">Quantidade: {item.quantity}</p>
+                        </div>
+                        <div className="flex justify-between items-end">
+                          <span className="font-bold text-[#3D144C]">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
-              <button
-                onClick={handleCheckout}
-                className="w-full bg-[#00CED1] py-4 rounded-xl text-white font-bold uppercase tracking-widest hover:bg-[#00B8B8] transition-all shadow-lg flex items-center justify-center gap-3"
-              >
-                Finalizar Pedido
-              </button>
+              {/* Rodapé e Fechamento */}
+              {cart.length > 0 && (
+                <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500 font-medium">Subtotal:</span>
+                    <span className="text-xl font-bold text-[#3D144C]">R$ {cartTotal.toFixed(2)}</span>
+                  </div>
 
-              <p className="text-[10px] text-center text-gray-400 font-medium uppercase tracking-tighter">
-                Taxas de envio calculadas no próximo passo
-              </p>
+                  <button
+                    onClick={handleCheckout}
+                    className="w-full bg-[#00CED1] py-4 rounded-xl text-white font-bold uppercase tracking-widest hover:bg-[#00B8B8] transition-all shadow-lg flex items-center justify-center gap-3"
+                  >
+                    Finalizar Pedido
+                  </button>
+
+                  <p className="text-[10px] text-center text-gray-400 font-medium uppercase tracking-tighter">
+                    Taxas de envio calculadas no próximo passo
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-    )
-  }
+          </div>
+        )
+      }
 
     </main >
   );
