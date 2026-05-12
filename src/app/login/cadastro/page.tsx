@@ -2,251 +2,193 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // IMPORTAÇÃO ADICIONADA
-import { auth, db } from '@/app/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff, MapPin, Phone, CreditCard, CheckCircle2 } from 'lucide-react';
+import { auth } from '@/app/lib/firebase';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
-export default function Cadastro() {
-  const router = useRouter(); // INICIALIZAÇÃO DO ROTEADOR
+export default function Login() {
+  const [isForgotMode, setIsForgotMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false); 
+  const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    confirmarEmail: '',
-    password: '',
-    confirmarSenha: '',
-    cpf: '',
-    celular: '',
-    cep: '',
-    endereco: '',
-    numero: '',
-    complemento: '',
-    referencia: '',
-    bairro: '',
-    cidade: '',
-    estado: ''
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  // FUNÇÃO QUE BUSCA O CEP AUTOMATICAMENTE
-  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    const cep = e.target.value.replace(/\D/g, '');
-    
-    if (cep.length === 8) {
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
-
-        if (!data.erro) {
-          setFormData(prev => ({
-            ...prev,
-            endereco: data.logradouro,
-            bairro: data.bairro,
-            cidade: data.localidade,
-            estado: data.uf
-          }));
-          setError('');
-        } else {
-          setError('CEP não encontrado.');
-        }
-      } catch (err) {
-        setError('Erro ao buscar o CEP automaticamente.');
-      }
+  // Função para Login Normal
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = '/'; 
+    } catch (err: any) {
+      setError('E-mail ou senha incorretos.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  // Função disparada ao clicar em "ESQUECEU?" ou no modo de recuperação
+  const handleForgotPassword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
-    if (name === 'cep') {
-      const maskedValue = value
-        .replace(/\D/g, '')
-        .replace(/(\d{5})(\d)/, '$1-$2')
-        .substring(0, 9);
-      setFormData({ ...formData, [name]: maskedValue });
+    if (!email) {
+      setError('Por favor, digite seu e-mail no campo acima.');
       return;
     }
 
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmarSenha) return setError('As senhas não coincidem.');
-    if (formData.email !== formData.confirmarEmail) return setError('Os e-mails não coincidem.');
-
     setLoading(true);
     setError('');
-    setSuccess(false);
+    setSuccessMessage('');
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
-
-      await updateProfile(user, { displayName: formData.nome });
-
-      await setDoc(doc(db, "usuarios", user.uid), {
-        uid: user.uid,
-        nome: formData.nome,
-        email: formData.email,
-        cpf: formData.cpf,
-        celular: formData.celular,
-        endereco: {
-          cep: formData.cep,
-          rua: formData.endereco,
-          numero: formData.numero,
-          complemento: formData.complemento,
-          referencia: formData.referencia,
-          bairro: formData.bairro,
-          cidade: formData.cidade,
-          estado: formData.estado
-        },
-        createdAt: new Date().toISOString()
-      });
-
-      setSuccess(true);
+      await sendPasswordResetEmail(auth, email);
+      setSuccessMessage('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
       
-      // REDIRECIONAMENTO AUTOMÁTICO APÓS 3 SEGUNDOS
       setTimeout(() => {
-        router.push('/login');
-      }, 3000);
-      
+        setIsForgotMode(false);
+        setSuccessMessage('');
+      }, 6000);
     } catch (err: any) {
-      setError(err.code === 'auth/email-already-in-use' ? 'E-mail já cadastrado.' : 'Erro ao criar conta.');
+      // ESTA LINHA VAI DIZER O ERRO REAL NO NAVEGADOR
+      console.error("Erro do Firebase:", err.code);
+      
+      if (err.code === 'auth/user-not-found') {
+        setError('Este e-mail não está cadastrado no sistema.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('O formato do e-mail é inválido.');
+      } else {
+        setError('Erro ao enviar e-mail. Tente novamente mais tarde.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#FDF2F2] py-12 px-4">
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-pink-50">
-        <div className="h-2 w-full bg-[#00CED1]"></div>
+    <main className="min-h-screen bg-[#FDF2F2] py-12 px-4 flex items-center justify-center">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-pink-50">
+        <div className="h-2 w-full bg-[#D63384]"></div>
         
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-10 border-b pb-6">
+        <div className="p-8 text-center">
+          <div className="mb-8">
             <Link href="/">
-              <h1 className="text-3xl font-serif text-[#D63384] italic">Lembrô<span className="text-pink-300">...</span></h1>
+              <h1 className="text-4xl font-serif text-[#D63384] italic mb-2">Lembrô<span className="text-pink-200">...</span></h1>
             </Link>
-            <div className="text-right">
-              <h2 className="text-xl font-bold text-[#3D144C]">Identificação</h2>
-              <p className="text-xs text-gray-400">Faça o seu login ou crie uma conta</p>
-            </div>
+            <h2 className="text-2xl font-bold text-[#3D144C] mt-4">
+              {isForgotMode ? 'Recuperar Senha' : 'Bem-vindo!'}
+            </h2>
+            <p className="text-gray-400 text-sm mt-1">
+              {isForgotMode ? 'Enviaremos um link para o seu e-mail' : 'Acesse sua conta para gerenciar suas memórias.'}
+            </p>
           </div>
 
-          {success && (
-            <div className="mb-8 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl animate-in fade-in zoom-in duration-500">
-              <CheckCircle2 className="text-emerald-500" size={24} />
-              <div>
-                <p className="font-bold">Cadastro criado com sucesso!</p>
-                <p className="text-sm">Aguarde... você será redirecionado para o login em instantes.</p>
-              </div>
+          {successMessage && (
+            <div className="mb-6 flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 p-3 rounded-xl text-xs text-left">
+              <CheckCircle2 size={16} className="shrink-0" /> {successMessage}
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-8">
-            <section>
-              <h3 className="flex items-center gap-2 font-bold text-[#3D144C] mb-4 uppercase text-xs tracking-wider">
-                <Lock size={16} className="text-[#00CED1]" /> Dados de Acesso
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="E-mail" name="email" type="email" placeholder="exemplo@email.com" value={formData.email} onChange={handleChange} icon={<Mail size={18}/>} />
-                <Input label="Confirmar E-mail" name="confirmarEmail" type="email" placeholder="Repita seu e-mail" value={formData.confirmarEmail} onChange={handleChange} icon={<Mail size={18}/>} />
+          <form onSubmit={isForgotMode ? handleForgotPassword : handleLogin} className="space-y-5 text-left">
+            <Input 
+              label="E-MAIL" 
+              type="email" 
+              placeholder="seu@email.com" 
+              value={email} 
+              onChange={(e: any) => setEmail(e.target.value)} 
+              icon={<Mail size={18}/>} 
+            />
+
+            {!isForgotMode && (
+              <div className="relative">
+                <div className="flex justify-between items-center mb-1 px-1">
+                  <label className="text-[10px] font-bold uppercase text-gray-400">SENHA</label>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                        setIsForgotMode(true);
+                        setError('');
+                    }}
+                    className="text-[10px] font-bold text-[#D63384] hover:opacity-70 transition-opacity"
+                  >
+                    ESQUECEU?
+                  </button>
+                </div>
                 <div className="relative">
-                  <Input label="Crie uma senha" name="password" type={showPassword ? "text" : "password"} placeholder="No mínimo 6 caracteres" value={formData.password} onChange={handleChange} icon={<Lock size={18}/>} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9 text-pink-300">
+                  <div className="absolute left-3 top-3 text-pink-300">
+                    <Lock size={18}/>
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="........"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-white border border-pink-100 rounded-xl py-2.5 pl-10 pr-12 text-sm text-gray-800 placeholder:text-gray-300 focus:ring-2 focus:ring-pink-100 focus:border-[#D63384] outline-none transition-all shadow-sm"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)} 
+                    className="absolute right-3 top-3 text-pink-300 hover:text-[#D63384]"
+                  >
                     {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
                   </button>
                 </div>
-                <Input label="Confirmar senha" name="confirmarSenha" type="password" placeholder="Repita sua senha" value={formData.confirmarSenha} onChange={handleChange} icon={<Lock size={18}/>} />
               </div>
-            </section>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <section className="space-y-4">
-                <h3 className="flex items-center gap-2 font-bold text-[#3D144C] border-b pb-2 uppercase text-xs tracking-wider">
-                  <User size={16} className="text-[#00CED1]" /> Dados Pessoais
-                </h3>
-                <Input label="Nome Completo" name="nome" placeholder="Digite seu nome e sobrenome" value={formData.nome} onChange={handleChange} icon={<User size={18}/>} />
-                <div className="grid grid-cols-2 gap-2">
-                  <Input label="CPF" name="cpf" placeholder="000.000.000-00" value={formData.cpf} onChange={handleChange} icon={<CreditCard size={18}/>} />
-                  <Input label="Celular" name="celular" placeholder="(11) 99999-9999" value={formData.celular} onChange={handleChange} icon={<Phone size={18}/>} />
-                </div>
-              </section>
+            {error && (
+              <p className="text-red-500 text-[11px] font-bold bg-red-50 p-2 rounded-lg text-center border border-red-100 transition-all">
+                {error}
+              </p>
+            )}
 
-              <section className="space-y-4">
-                <h3 className="flex items-center gap-2 font-bold text-[#3D144C] border-b pb-2 uppercase text-xs tracking-wider">
-                  <MapPin size={16} className="text-[#00CED1]" /> Endereço de Entrega
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-1">
-                    <Input 
-                      label="CEP" 
-                      name="cep" 
-                      placeholder="00000-000" 
-                      value={formData.cep} 
-                      onChange={handleChange} 
-                      onBlur={handleCepBlur} 
-                    />
-                  </div>
-                  <div className="col-span-2"><Input label="Endereço" name="endereco" placeholder="Rua, Avenida..." value={formData.endereco} onChange={handleChange} /></div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <Input label="Nº" name="numero" placeholder="123" value={formData.numero} onChange={handleChange} />
-                  <div className="col-span-2"><Input label="Bairro" name="bairro" placeholder="Nome do bairro" value={formData.bairro} onChange={handleChange} /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input label="Complemento" name="complemento" placeholder="Apto, Bloco..." value={formData.complemento} onChange={handleChange} />
-                  <Input label="Referência" name="referencia" placeholder="Perto de..." value={formData.referencia} onChange={handleChange} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input label="Cidade" name="cidade" value={formData.cidade} onChange={handleChange} readOnly className="bg-gray-50 cursor-not-allowed opacity-70" />
-                  <Input label="UF" name="estado" value={formData.estado} onChange={handleChange} readOnly className="bg-gray-50 cursor-not-allowed opacity-70" />
-                </div>
-              </section>
-            </div>
-
-            {error && <p className="text-red-500 text-center bg-red-50 p-2 rounded-lg border border-red-100 text-sm font-bold">{error}</p>}
-
-            <div className="flex flex-col md:flex-row justify-end gap-3 md:gap-4 pt-6 border-t">
-              <Link 
-                href="/login" 
-                className="w-full md:w-auto px-6 md:px-8 py-3 rounded-xl font-bold text-[#D63384] border-2 border-[#D63384] hover:bg-[#D63384] hover:text-white transition-all flex items-center justify-center shadow-sm text-sm md:text-base"
-              >
-                Fazer Login
-              </Link>
-              
-              {!success && (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full md:w-auto bg-[#00CED1] hover:bg-[#00B8B8] text-white px-6 md:px-10 py-4 md:py-3 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 text-sm md:text-base active:scale-95 disabled:opacity-50"
-                >
-                  {loading ? <Loader2 className="animate-spin" /> : <>Criar Conta <ArrowRight size={18}/></>}
-                </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#D63384] hover:bg-[#c12a74] text-white py-4 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 mt-4"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : (
+                <>{isForgotMode ? 'ENVIAR LINK DE RECUPERAÇÃO' : 'ENTRAR NA CONTA'} <ArrowRight size={18}/></>
               )}
-            </div>
+            </button>
           </form>
+
+          <div className="mt-8 pt-6 flex flex-col gap-4 text-center border-t border-gray-50">
+            {isForgotMode ? (
+              <button 
+                onClick={() => setIsForgotMode(false)}
+                className="text-sm text-gray-400 font-semibold hover:text-[#D63384] transition-colors"
+              >
+                Voltar para o Login
+              </button>
+            ) : (
+              <p className="text-sm text-gray-500">
+                Não tem uma conta? <Link href="/login/cadastro" className="text-[#D63384] font-bold hover:underline">Criar agora</Link>
+              </p>
+            )}
+            
+            <div className="flex items-center justify-center gap-2 text-[10px] text-gray-300 tracking-widest uppercase">
+               <span className="text-pink-200 text-xs">❤</span> ETERNIZE MOMENTOS <span className="text-pink-200 text-xs">❤</span>
+            </div>
+          </div>
         </div>
       </div>
     </main>
   );
 }
 
-function Input({ label, icon, className, ...props }: any) {
+function Input({ label, icon, ...props }: any) {
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex flex-col gap-1 w-full text-left">
       <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">{label}</label>
       <div className="relative">
         {icon && <div className="absolute left-3 top-3 text-pink-300">{icon}</div>}
         <input
           {...props}
-          className={`w-full bg-white border border-pink-100 rounded-xl py-2.5 ${icon ? 'pl-10' : 'pl-4'} pr-4 text-sm text-gray-800 placeholder:text-gray-300 focus:ring-2 focus:ring-pink-100 focus:border-[#00CED1] outline-none transition-all shadow-sm ${className}`}
+          className="w-full bg-white border border-pink-100 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-300 focus:ring-2 focus:ring-pink-100 focus:border-[#D63384] outline-none transition-all shadow-sm"
         />
       </div>
     </div>
